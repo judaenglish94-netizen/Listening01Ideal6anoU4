@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listening Quiz | Colégio Ideal - 6º Ano</title>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-orange: #F15A24;
+      --bg-orange-soft: #D95427;
+      --dark-purple: #2B1842;
+      --purple-hover: #3D235C;
+      --card-white: #FFFFFF;
+      --success-green: #2E7D32;
+      --error-red: #C62828;
+      --gray-bg: #F9F9FB;
+      --border-gray: #E5E5EA;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-orange-soft);
+      color: var(--dark-purple);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 10px 15px 30px 15px;
+      transition: background-color 0.4s ease;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0 15px 0;
+      width: 100%;
+      background: var(--bg-orange-soft);
+      transition: background 0.4s ease;
+    }
+
+    .logo-card {
+      background: var(--card-white);
+      padding: 0;
+      border-radius: 20px;
+      border: 3px solid var(--dark-purple);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+      overflow: hidden;
+      width: 120px;
+      height: 120px;
+    }
+
+    .logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .app-header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--card-white);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      margin-bottom: 2px;
+      text-align: center;
+    }
+
+    .app-header p {
+      font-size: 0.95rem;
+      color: #FFF;
+      font-weight: 700;
+      opacity: 0.95;
+      letter-spacing: 0.5px;
+    }
+
+    /* FIXO E CENTRALIZADO: AUDIO PLAYER CONTAINER */
+    .audio-player-card {
+      background: var(--card-white);
+      border: 3px solid var(--dark-purple);
+      border-radius: 50px;
+      padding: 8px 18px;
+      margin-top: 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .audio-player-card audio {
+      width: 100%;
+      height: 38px;
+      outline: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      z-index: 5;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    .page {
+      display: none;
+      background: var(--card-white);
+      border-radius: 24px;
+      padding: 22px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+      animation: fadeIn 0.35s ease-in-out;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .summary-scrollbox {
+      max-height: 280px;
+      overflow-y: auto;
+      padding: 16px;
+      border: 2px dashed rgba(241, 90, 36, 0.35);
+      border-radius: 16px;
+      background-color: #FFFDFB;
+      margin: 15px 0;
+    }
+
+    .summary-scrollbox::-webkit-scrollbar {
+      width: 7px;
+    }
+    .summary-scrollbox::-webkit-scrollbar-thumb {
+      background: var(--dark-purple);
+      border-radius: 4px;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      color: var(--dark-purple);
+      text-align: center;
+      margin-bottom: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .topic-title {
+      font-weight: 800;
+      color: var(--primary-orange);
+      margin-top: 14px;
+      margin-bottom: 4px;
+      font-size: 0.98rem;
+    }
+
+    p, li {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    ul {
+      margin-left: 18px;
+      margin-bottom: 8px;
+    }
+
+    .example {
+      background-color: #F4F0F9;
+      padding: 6px 10px;
+      border-left: 4px solid var(--dark-purple);
+      border-radius: 6px;
+      margin: 6px 0;
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--dark-purple);
+    }
+
+    .btn {
+      background-color: var(--dark-purple);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      display: block;
+      margin: 18px auto 0 auto;
+      transition: all 0.2s ease;
+      box-shadow: 0 5px 14px rgba(43, 24, 66, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 18px rgba(43, 24, 66, 0.45);
+      background-color: var(--purple-hover);
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #F0F0F3;
+    }
+
+    .timer-badge {
+      background-color: var(--dark-purple);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .q-counter {
+      font-weight: 800;
+      color: var(--primary-orange);
+      font-size: 0.95rem;
+    }
+
+    .question-nav-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 5px;
+      margin-bottom: 16px;
+      background: #F4F2F8;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid #E2DCED;
+    }
+
+    @media (max-width: 500px) {
+      .question-nav-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    .q-grid-btn {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1.5px solid #CBD1D8;
+      background: #FFFFFF;
+      color: var(--dark-purple);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .q-grid-btn:hover {
+      border-color: var(--dark-purple);
+      background-color: #EFEBF5;
+    }
+
+    .q-grid-btn.active {
+      border-color: var(--primary-orange);
+      box-shadow: 0 0 0 2px var(--primary-orange);
+      font-weight: 800;
+    }
+
+    .q-grid-btn.answered {
+      background-color: #E2D9F3;
+      color: var(--dark-purple);
+    }
+
+    .q-grid-btn.checked {
+      background-color: var(--dark-purple);
+      color: #FFFFFF;
+      border-color: var(--dark-purple);
+    }
+
+    .question-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--dark-purple);
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .opt-btn {
+      background: #F9F9FB;
+      border: 2px solid #E5E5EA;
+      padding: 11px 15px;
+      border-radius: 12px;
+      text-align: left;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      color: var(--dark-purple);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .opt-btn:hover {
+      border-color: var(--dark-purple);
+      background-color: #F3EEFA;
+    }
+
+    .opt-btn.selected {
+      border-color: var(--dark-purple);
+      background-color: #EAE3F4;
+      font-weight: 700;
+    }
+
+    .opt-letter {
+      background: var(--dark-purple);
+      color: white;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .opt-btn.selected .opt-letter {
+      background: var(--primary-orange);
+    }
+
+    .feedback-box {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      display: none;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .feedback-box.correct {
+      background-color: #E8F5E9;
+      color: var(--success-green);
+      border: 1.5px solid #A5D6A7;
+    }
+
+    .feedback-box.wrong {
+      background-color: #FFEBEE;
+      color: var(--error-red);
+      border: 1.5px solid #FFCDD2;
+    }
+
+    .quiz-nav-btns {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      gap: 8px;
+    }
+
+    .btn-quiz-nav {
+      background-color: var(--dark-purple);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    .btn-quiz-nav:hover {
+      background-color: var(--purple-hover);
+    }
+
+    .btn-quiz-check {
+      background-color: var(--dark-purple);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.88rem;
+      box-shadow: 0 4px 10px rgba(43, 24, 66, 0.25);
+    }
+
+    .btn-quiz-check:hover {
+      background-color: var(--purple-hover);
+    }
+
+    .btn-quiz-check:disabled {
+      background-color: #D1D1D6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .score-badge {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary-orange);
+      margin: 10px 0;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER FIXO E AUDIO PLAYER CENTRALIZADO -->
+  <div class="app-header" id="appHeader">
+    <div class="logo-card">
+      <img src="ideal.png" alt="Colégio Ideal" class="logo-img" onerror="this.onerror=null; this.src='https://placehold.co/120x120/2B1842/FFFFFF?text=Colegio+Ideal';">
+    </div>
+    <h1>Listening Comprehension Quiz</h1>
+    <p>Colégio Ideal — 6º Ano (Fund II)</p>
+
+    <!-- PLAYER DE ÁUDIO FIXO (CONTINUA TOCANDO AO MUDAR DE PÁGINA) -->
+    <div class="audio-player-card">
+      <audio controls id="mainAudioPlayer">
+        <source src="listeningI6ano.mp3" type="audio/mpeg">
+        Seu navegador não suporta o elemento de áudio.
+      </audio>
+    </div>
+  </div>
+
+  <div class="container">
+    
+    <!-- PÁGINA 1: ORIENTAÇÕES & INSTRUÇÕES DE LISTENING -->
+    <div class="page active" id="page1">
+      <h2>Listening Activity & Instructions</h2>
+
+      <div class="summary-scrollbox">
+        <p>Olá, querido(a) aluno(a)! Seja bem-vindo(a) à atividade de compreensão auditiva (Listening Comprehension)!</p>
+        
+        <div class="topic-title">1. Como funciona a atividade?</div>
+        <p>Você ouvirá uma matéria de rádio sobre dois jovens aventureiros: <strong>Amanda Jones</strong> e <strong>Aaron Powell</strong>.</p>
+        
+        <div class="topic-title">2. Dicas importantes:</div>
+        <ul>
+          <li>O player de áudio fica <strong>fixo no topo da tela</strong>. Você pode dar play, pausar ou retornar o áudio a qualquer momento!</li>
+          <li>Ao mudar de questão ou avançar de página, o áudio <strong>continua tocando sem interromper</strong>.</li>
+          <li>A atividade contém <strong>20 questões</strong> em inglês. Cada questão vale <strong>0,05 ponto</strong>, totalizando <strong>1,0 ponto</strong>.</li>
+          <li>Após selecionar sua resposta, clique em <strong>Check</strong> para conferir o feedback pedagógico em português.</li>
+        </ul>
+      </div>
+
+      <button class="btn" type="button" onclick="startQuiz()">Start quiz</button>
+    </div>
+
+    <!-- PÁGINA 2: APLICAÇÃO DO QUIZ -->
+    <div class="page" id="page2">
+      <div class="quiz-header">
+        <span class="q-counter" id="qCounter">Questão 1 de 20</span>
+        <div class="timer-badge">
+          ⏱️ <span id="timerDisplay">00:00</span>
+        </div>
+      </div>
+
+      <!-- MENU NUMÉRICO 1 A 20 -->
+      <div class="question-nav-grid" id="questionNavGrid"></div>
+
+      <!-- CONTEÚDO DA QUESTÃO -->
+      <div id="questionContainer"></div>
+
+      <!-- CAIXA DE FEEDBACK PEDAGÓGICO -->
+      <div class="feedback-box" id="feedbackBox"></div>
+
+      <!-- BOTÕES DE NAVEGAÇÃO: PREVIOUS - CHECK - NEXT -->
+      <div class="quiz-nav-btns">
+        <button class="btn-quiz-nav" id="btnPrev" type="button" onclick="prevQuestion()">Previous</button>
+        <button class="btn-quiz-check" id="btnCheck" type="button" onclick="checkAnswer()">Check</button>
+        <button class="btn-quiz-nav" id="btnNext" type="button" onclick="nextQuestion()">Next</button>
+      </div>
+    </div>
+
+    <!-- PÁGINA 3: RESULTADO & RELATÓRIO PEDAGÓGICO -->
+    <div class="page" id="page3">
+      <h2>Resultado do Quiz</h2>
+      <div id="resultSummary" style="text-align: center; margin: 12px 0;"></div>
+      
+      <div id="pedagogicalFeedback" style="background: #FFFDFB; border: 2px solid var(--primary-orange); padding: 14px; border-radius: 14px; margin: 15px 0;"></div>
+
+      <button class="btn" type="button" onclick="resetToHome()">Refazer Quiz</button>
+    </div>
+
+  </div>
+
+  <div class="modal-overlay" id="modalAlert">
+    <div class="modal-card">
+      <h3 style="color: var(--error-red); margin-bottom: 10px;">Aviso</h3>
+      <p id="modalMsg" style="font-size: 0.9rem; color: #444;"></p>
+      <button class="btn" type="button" style="margin-top: 14px;" onclick="closeModal()">Entender</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://iolqeovjhayslwkqsduf.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_qX1lct_Gb5xbFZZ4AnJ5_A_fuHwF7KD';
+
+    let supabaseClient = null;
+
+    try {
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+    } catch (error) {
+      console.warn('Supabase indisponível. Funcionando localmente.', error);
+      supabaseClient = null;
+    }
+
+    let currentQuestionIndex = 0;
+    let userAnswers = {};
+    let checkedQuestions = {};
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let quizStarted = false;
+    let lastNavTime = 0;
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function goToPage(pageNum) {
+      document.querySelectorAll('.page').forEach(function(page) {
+        page.classList.remove('active');
+      });
+
+      const targetPage = $('page' + pageNum);
+      if (!targetPage) return;
+
+      targetPage.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* =========================
+       20 QUESTÕES BASEADAS NO ÁUDIO
+       VALOR TOTAL: 1,0 PONTO (0,05 CADA)
+       ========================= */
+    const questions = [
+      {
+        id: 1,
+        text: "What are the presenters talking about on today's show?",
+        options: [
+          "Two professional Olympic athletes",
+          "Two young adventurers planning exciting trips",
+          "Two teachers traveling around the world",
+          "Two mountain climbers in Europe",
+          "Two students preparing for a science test"
+        ],
+        answer: "Two young adventurers planning exciting trips",
+        exp: "O apresentador afirma no início: <strong>On today's show, we're looking at two young adventurers who are planning exciting trips</strong> ('No programa de hoje, estamos de olho em dois jovens aventureiros que estão planejando viagens empolgantes')."
+      },
+      {
+        id: 2,
+        text: "How old is Amanda Jones?",
+        options: [
+          "12 years old",
+          "13 years old",
+          "14 years old",
+          "15 years old",
+          "16 years old"
+        ],
+        answer: "14 years old",
+        exp: "No áudio é dito: <strong>Jones is a 14 year old schoolgirl</strong> ('Jones é uma estudante de 14 anos de idade')."
+      },
+      {
+        id: 3,
+        text: "Where is Amanda Jones from?",
+        options: [
+          "The USA",
+          "Switzerland",
+          "Tanzania",
+          "New Zealand",
+          "Australia"
+        ],
+        answer: "New Zealand",
+        exp: "O locutor informa: <strong>14 year old schoolgirl from New Zealand</strong> ('estudante de 14 anos da Nova Zelândia')."
+      },
+      {
+        id: 4,
+        text: "What did Amanda Jones do in 2017?",
+        options: [
+          "She climbed Mount Blanc",
+          "She skied to the South Pole",
+          "She skied to the North Pole",
+          "She swam across the ocean",
+          "She traveled to Africa"
+        ],
+        answer: "She skied to the South Pole",
+        exp: "A transcrição confirma: <strong>She skied to the South Pole in 2017</strong> ('Ela esquiou até o Polo Sul em 2017')."
+      },
+      {
+        id: 5,
+        text: "Where is Amanda Jones planning to ski next month?",
+        options: [
+          "To the South Pole",
+          "To the North Pole",
+          "To Mount Kilimanjaro",
+          "To Mount Blanc",
+          "Across Switzerland"
+        ],
+        answer: "To the North Pole",
+        exp: "O texto diz: <strong>and next month she is skiing to the North Pole</strong> ('e no próximo mês ela vai esquiar até o Polo Norte')."
+      },
+      {
+        id: 6,
+        text: "What is the total distance of Amanda's next expedition to the North Pole?",
+        options: [
+          "80 kilometers",
+          "100 kilometers",
+          "130 kilometers",
+          "150 kilometers",
+          "200 kilometers"
+        ],
+        answer: "130 kilometers",
+        exp: "O áudio indica exatamente: <strong>a total distance of 130 kilometers</strong> ('uma distância total de 130 quilômetros')."
+      },
+      {
+        id: 7,
+        text: "How often does Amanda go to the gym to train?",
+        options: [
+          "Twice a week",
+          "Every day for 1 to 2 hours",
+          "Three times a week for 3 hours",
+          "Only on weekends",
+          "Every morning for 4 hours"
+        ],
+        answer: "Every day for 1 to 2 hours",
+        exp: "Na entrevista é explicado: <strong>She's going to the gym every day for one to two hours</strong> ('Ela vai à academia todos os dias por uma a duas horas')."
+      },
+      {
+        id: 8,
+        text: "How many calories does Amanda's body need per day during training?",
+        options: [
+          "3,000 calories",
+          "5,000 calories",
+          "6,000 calories",
+          "8,000 calories",
+          "10,000 calories"
+        ],
+        answer: "8,000 calories",
+        exp: "O locutor destaca o número de calorias: <strong>8,000 calories a day in total</strong> ('8.000 calorias por dia no total')."
+      },
+      {
+        id: 9,
+        text: "Who is the second young adventurer mentioned in the audio?",
+        options: [
+          "Mike Jones",
+          "Paul Smith",
+          "Aaron Powell",
+          "Gabriel Brown",
+          "Lucas Miller"
+        ],
+        answer: "Aaron Powell",
+        exp: "O apresentador anuncia o próximo jovem: <strong>Next is Aaron Powell</strong> ('O próximo é Aaron Powell')."
+      },
+      {
+        id: 10,
+        text: "How old is Aaron Powell?",
+        options: [
+          "12 years old",
+          "13 years old",
+          "14 years old",
+          "15 years old",
+          "16 years old"
+        ],
+        answer: "13 years old",
+        exp: "O áudio relata: <strong>a 13 year old schoolboy from Ohio</strong> ('um estudante de 13 anos de idade de Ohio')."
+      },
+      {
+        id: 11,
+        text: "Where is Aaron Powell from?",
+        options: [
+          "Ohio in the USA",
+          "New Zealand",
+          "Switzerland",
+          "Tanzania",
+          "England"
+        ],
+        answer: "Ohio in the USA",
+        exp: "A transcrição afirma: <strong>from Ohio in the USA</strong> ('de Ohio nos EUA')."
+      },
+      {
+        id: 12,
+        text: "What main goal does Aaron Powell want to achieve?",
+        options: [
+          "Ski to the North Pole and South Pole",
+          "Climb the highest mountains on all seven continents",
+          "Run a marathon on every continent",
+          "Swim across seven major lakes",
+          "Cycle around the entire world"
+        ],
+        answer: "Climb the highest mountains on all seven continents",
+        exp: "É dito expressamente: <strong>He wants to climb the highest mountains on all seven continents</strong> ('Ele quer escalar as montanhas mais altas de todos os sete continentes')."
+      },
+      {
+        id: 13,
+        text: "Which mountain did Aaron climb four years ago?",
+        options: [
+          "Mount Everest",
+          "Mount Kilimanjaro",
+          "Mount Blanc",
+          "Mount Fuji",
+          "Mount McKinley"
+        ],
+        answer: "Mount Blanc",
+        exp: "O trecho registra: <strong>He climbed Mount Blanc in Switzerland four years ago</strong> ('Ele escalou o Monte Branco na Suíça há quatro anos')."
+      },
+      {
+        id: 14,
+        text: "In which country was Mount Blanc located according to the audio?",
+        options: [
+          "France",
+          "USA",
+          "Tanzania",
+          "Switzerland",
+          "New Zealand"
+        ],
+        answer: "Switzerland",
+        exp: "No áudio, o narrador menciona: <strong>Mount Blanc in Switzerland</strong> ('Monte Branco na Suíça')."
+      },
+      {
+        id: 15,
+        text: "Where is Aaron at the moment?",
+        options: [
+          "In Ohio, studying at school",
+          "In New Zealand with Amanda",
+          "In Switzerland climbing Mount Blanc",
+          "In Tanzania getting ready to climb Mount Kilimanjaro",
+          "In South Pole skiing"
+        ],
+        answer: "In Tanzania getting ready to climb Mount Kilimanjaro",
+        exp: "O locutor explica: <strong>At the moment, he's in Tanzania getting ready to climb Mount Kilimanjaro</strong> ('No momento, ele está na Tanzânia se preparando para escalar o Monte Kilimanjaro')."
+      },
+      {
+        id: 16,
+        text: "Mount Kilimanjaro is the highest mountain on which continent?",
+        options: [
+          "Asian continent",
+          "European continent",
+          "African continent",
+          "American continent",
+          "Oceania"
+        ],
+        answer: "African continent",
+        exp: "A pergunta no áudio confirma: <strong>Is that the highest mountain in the African continent? Yes, it is.</strong> ('Essa é a montanha mais alta do continente africano? Sim, é.')."
+      },
+      {
+        id: 17,
+        text: "How high is Mount Kilimanjaro?",
+        options: [
+          "4,895 meters high",
+          "5,895 meters high",
+          "6,895 meters high",
+          "5,200 meters high",
+          "8,848 meters high"
+        ],
+        answer: "5,895 meters high",
+        exp: "O áudio fornece a altura exata: <strong>It's 5,895 meters high</strong> ('Ela tem 5.895 metros de altura')."
+      },
+      {
+        id: 18,
+        text: "Is Aaron missing school while on this adventure?",
+        options: [
+          "No, he goes to school online every day",
+          "Yes, he is missing school",
+          "No, it is summer vacation",
+          "Yes, but he finished school already",
+          "The audio doesn't mention school"
+        ],
+        answer: "Yes, he is missing school",
+        exp: "A conversa confirma: <strong>And is Aaron missing school? Yes, he is...</strong> ('E o Aaron está perdendo aula? Sim, está...')."
+      },
+      {
+        id: 19,
+        text: "How does Aaron study when he is not climbing?",
+        options: [
+          "He uses a laptop to watch online classes",
+          "His teacher calls him every night",
+          "He has his school books with him to study",
+          "He studies with private tutors in Tanzania",
+          "He doesn't study during the trips"
+        ],
+        answer: "He has his school books with him to study",
+        exp: "A mãe de Aaron relata: <strong>his mom says he has his school books with him so he can study when they aren't climbing</strong> ('sua mãe diz que ele tem os livros escolares com ele para que possa estudar quando não estiverem escalando')."
+      },
+      {
+        id: 20,
+        text: "What comment does the presenter make at the end about Aaron's homework?",
+        options: [
+          "He is lazy and never completes his homework",
+          "He is doing his homework while climbing Kilimanjaro",
+          "He forgot his homework at home in Ohio",
+          "He is doing his homework in the gym",
+          "His mother does his homework for him"
+        ],
+        answer: "He is doing his homework while climbing Kilimanjaro",
+        exp: "O apresentador brinca no final: <strong>Wow, he's doing his homework while climbing the Kilimanjaro. Now that's an adventure.</strong> ('Uau, ele está fazendo a lição de casa enquanto escala o Kilimanjaro. Isso sim é uma aventura.')."
+      }
+    ];
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function startQuiz() {
+      quizStarted = true;
+      currentQuestionIndex = 0;
+      userAnswers = {};
+      checkedQuestions = {};
+      timerSeconds = 0;
+      lastNavTime = Date.now();
+
+      clearInterval(timerInterval);
+      $('timerDisplay').innerText = '00:00';
+
+      renderQuestionGrid();
+      renderQuestion();
+      goToPage(2);
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(function() {
+        timerSeconds++;
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        $('timerDisplay').innerText = mins + ':' + secs;
+      }, 1000);
+    }
+
+    function renderQuestionGrid() {
+      const grid = $('questionNavGrid');
+      let html = '';
+
+      for (let i = 0; i < questions.length; i++) {
+        const qId = questions[i].id;
+        let stateClass = '';
+
+        if (i === currentQuestionIndex) {
+          stateClass += ' active';
+        }
+        if (checkedQuestions[qId]) {
+          stateClass += ' checked';
+        } else if (userAnswers[qId]) {
+          stateClass += ' answered';
+        }
+
+        html += `<button class="q-grid-btn ${stateClass}" type="button" onclick="jumpToQuestion(${i})">${i + 1}</button>`;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function jumpToQuestion(index) {
+      const agora = Date.now();
+      if (agora - lastNavTime < 200) return;
+      lastNavTime = agora;
+
+      currentQuestionIndex = index;
+      renderQuestionGrid();
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = questions[currentQuestionIndex];
+      if (!q) return;
+
+      const container = $('questionContainer');
+      const feedbackBox = $('feedbackBox');
+
+      feedbackBox.style.display = 'none';
+      feedbackBox.className = 'feedback-box';
+
+      $('qCounter').innerText = `Questão ${currentQuestionIndex + 1} de ${questions.length}`;
+
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      let html = '';
+
+      html += `<div class="question-title">${escapeHtml(q.text)}</div>`;
+      html += '<div class="options-grid">';
+
+      q.options.forEach((opt, idx) => {
+        const isSelected = userAnswers[q.id] === opt ? 'selected' : '';
+        const letter = letters[idx] || '';
+
+        html += `
+          <button class="opt-btn ${isSelected}" type="button" onclick="selectOption('${escapeHtml(opt)}')">
+            <span class="opt-letter">${letter}</span>
+            <span>${escapeHtml(opt)}</span>
+          </button>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+
+      $('btnPrev').style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+      $('btnNext').innerText = currentQuestionIndex === questions.length - 1 ? 'Finalizar' : 'Next';
+      $('btnCheck').disabled = !!checkedQuestions[q.id];
+
+      if (checkedQuestions[q.id]) {
+        showQuestionFeedback();
+      }
+    }
+
+    function selectOption(opt) {
+      const q = questions[currentQuestionIndex];
+      if (!q || checkedQuestions[q.id]) return;
+
+      userAnswers[q.id] = opt;
+      renderQuestionGrid();
+      renderQuestion();
+    }
+
+    function checkAnswer() {
+      const q = questions[currentQuestionIndex];
+      if (!q || checkedQuestions[q.id]) return;
+
+      const userAns = userAnswers[q.id];
+      if (!userAns) {
+        const feedbackBox = $('feedbackBox');
+        feedbackBox.className = 'feedback-box wrong';
+        feedbackBox.style.display = 'block';
+        feedbackBox.innerHTML = '<strong>⚠️ Escolha uma das opções antes de clicar em Check.</strong>';
+        return;
+      }
+
+      checkedQuestions[q.id] = true;
+      renderQuestionGrid();
+      showQuestionFeedback();
+      $('btnCheck').disabled = true;
+    }
+
+    function showQuestionFeedback() {
+      const q = questions[currentQuestionIndex];
+      const feedbackBox = $('feedbackBox');
+      if (!q) return;
+
+      const userAns = userAnswers[q.id];
+      const isCorrect = userAns === q.answer;
+
+      feedbackBox.style.display = 'block';
+
+      if (isCorrect) {
+        feedbackBox.className = 'feedback-box correct';
+        feedbackBox.innerHTML = `
+          <strong>✨ Muito bem! Resposta Correta!</strong><br>
+          <strong>Justificativa do Áudio:</strong> ${q.exp}
+        `;
+      } else {
+        feedbackBox.className = 'feedback-box wrong';
+        feedbackBox.innerHTML = `
+          <strong>❌ Resposta Incorreta.</strong><br>
+          <strong>Sua resposta:</strong> ${escapeHtml(userAns)}<br>
+          <strong>Resposta correta:</strong> <strong>${escapeHtml(q.answer)}</strong><br>
+          <strong>Justificativa do Áudio:</strong> ${q.exp}
+        `;
+      }
+    }
+
+    function prevQuestion() {
+      const agora = Date.now();
+      if (agora - lastNavTime < 300) return;
+      lastNavTime = agora;
+
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestionGrid();
+        renderQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      const agora = Date.now();
+      if (agora - lastNavTime < 300) return;
+      lastNavTime = agora;
+
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestionGrid();
+        renderQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    async function finishQuiz() {
+      if (!quizStarted) return;
+
+      clearInterval(timerInterval);
+      quizStarted = false;
+
+      let correctCount = 0;
+      let amandaErrors = 0;
+      let aaronErrors = 0;
+
+      questions.forEach(q => {
+        const uAns = userAnswers[q.id];
+        if (uAns === q.answer) {
+          correctCount++;
+        } else {
+          if (q.id <= 8) {
+            amandaErrors++;
+          } else {
+            aaronErrors++;
+          }
+        }
+      });
+
+      const total = questions.length;
+      const wrongCount = total - correctCount;
+      
+      // CÁLCULO DA NOTA DE 0 A 1.0 (VALOR DE 1,0 PONTO TOTAL - 0.05 POR QUESTÃO)
+      const score = (correctCount * 0.05).toFixed(2);
+
+      $('resultSummary').innerHTML = `
+        <h3 style="color: var(--dark-purple);">Quiz de Listening Concluído!</h3>
+        <div class="score-badge">Nota: ${score} / 1,00</div>
+        <p style="font-size: 1rem; margin-top: 8px;">
+          Você acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.
+        </p>
+        <p style="font-size: 0.9rem; color: #555; margin-top: 4px;">
+          Tempo total de conclusão: <strong>${Math.floor(timerSeconds / 60)}m ${timerSeconds % 60}s</strong>
+        </p>
+      `;
+
+      let fbText = '<strong style="color: var(--dark-purple); font-size: 0.98rem;">Relatório Pedagógico de Desempenho em Listening:</strong><br>';
+
+      if (wrongCount === 0) {
+        fbText += '<p style="margin-top:6px;"><strong>Excelente Desempenho! 🎉</strong> Nota máxima 1,00! Você compreendeu perfeitamente todos os detalhes sobre a expedição de Amanda Jones e a escalada de Aaron Powell!</p>';
+      } else {
+        fbText += `<p style="margin-top:6px;">Você errou <strong>${wrongCount}</strong> questão(ões). Veja os pontos a aprimorar na sua escuta:</p><ul style="margin-top:8px;">`;
+
+        if (amandaErrors >= 3) {
+          fbText += `
+            <li>
+              <strong>Revisar Bloco 1 — Amanda Jones (Questões 1 a 8):</strong><br>
+              Atenção aos números e dados de treino! Você errou <strong>${amandaErrors}</strong> questões sobre Amanda (idade, distância de 130 km e 8.000 calorias).
+            </li>`;
+        } else if (amandaErrors > 0) {
+          fbText += `<li><strong>Ajuste Fino em Amanda Jones:</strong> Pequenos deslizes em detalhes numéricos ou locais.</li>`;
+        }
+
+        if (aaronErrors >= 3) {
+          fbText += `
+            <li>
+              <strong>Revisar Bloco 2 — Aaron Powell (Questões 9 a 20):</strong><br>
+              Atenção aos detalhes geográficos! Você errou <strong>${aaronErrors}</strong> questões sobre Aaron (escalada no Monte Blanc, Kilimanjaro e os estudos durante a viagem).
+            </li>`;
+        } else if (aaronErrors > 0) {
+          fbText += `<li><strong>Ajuste Fino em Aaron Powell:</strong> Fique atento às perguntas sobre o país de origem e a altura do Kilimanjaro.</li>`;
+        }
+
+        fbText += '</ul>';
+      }
+
+      $('pedagogicalFeedback').innerHTML = fbText;
+
+      goToPage(3);
+    }
+
+    function resetToHome() {
+      clearInterval(timerInterval);
+      quizStarted = false;
+      currentQuestionIndex = 0;
+      userAnswers = {};
+      checkedQuestions = {};
+      timerSeconds = 0;
+
+      goToPage(1);
+    }
+
+    function showModal(msg) {
+      $('modalMsg').innerText = msg;
+      $('modalAlert').style.display = 'flex';
+    }
+
+    function closeModal() {
+      $('modalAlert').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      goToPage(1);
+    });
+  </script>
+</body>
+</html>
